@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chaser: know who owes you</title>
+<meta name="description" content="Freelancer invoice tracker. Shows what needs action today and prepares reminders.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E9EDF2;--p:#fff;--ink:#18212F;--mut:#5B677A;--ln:#CFD7E2;--blue:#2B44E8;--late:#C23B2E;--soon:#8F5509;--ok:#1E7A55;--lb:#F7DDD9;--sb:#F5E6CC;--ob:#DDE3EE;--ob2:#D6EBDF}
+@media(prefers-color-scheme:dark){:root{--bg:#0F1520;--p:#171F2E;--ink:#E7ECF4;--mut:#9AA7BB;--ln:#2A3548;--blue:#8DA0FF;--late:#FF8A7D;--soon:#E8B05A;--ok:#6CCBA0;--lb:#3A1F1D;--sb:#372B14;--ob:#222C40;--ob2:#16301F}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans","Segoe UI",Arial,sans-serif}
+#app{max-width:460px;margin:0 auto;min-height:100vh;padding:22px 18px 110px}
+h1,h2{font-family:"Bricolage Grotesque","Trebuchet MS",sans-serif;margin:0;line-height:1.1}h1{font-size:2rem;font-weight:800}h2{font-size:1.4rem}
+.m{color:var(--mut);font-size:.9rem;margin:.2rem 0}.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.lb{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}
+.card{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:14px;margin:0 0 10px}.card[data-go]{cursor:pointer}
+.r{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.ra{text-align:right}.g{margin-top:12px;gap:8px}.g>*{flex:1}
+.bd{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.8rem;font-weight:600;background:var(--ob);color:var(--mut)}
+.bd.lt{background:var(--lb);color:var(--late)}.bd.sn{background:var(--sb);color:var(--soon)}.bd.ok{background:var(--ob2);color:var(--ok)}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--ln);background:var(--p);cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}@media(prefers-color-scheme:dark){.btn.pri{color:#0F1520}}
+.btn.sm{min-height:36px;padding:4px 12px;font-size:.85rem}.w{width:100%;margin-top:10px}
+.lnk{background:none;border:0;color:var(--mut);text-decoration:underline;width:100%;min-height:44px;margin-top:6px;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+label{display:grid;gap:4px;font-size:.88rem;color:var(--mut);margin-bottom:12px}input,select,textarea{width:100%;padding:11px;border:1.5px solid var(--ln);border-radius:10px;background:var(--p)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bk{display:inline-block;color:var(--mut);margin-bottom:10px;min-height:32px}
+.big{font:800 2rem "Bricolage Grotesque",sans-serif}.pb{height:10px;background:var(--ob);border-radius:5px;margin:10px 0 6px;overflow:hidden}.pb i{display:block;height:100%;background:var(--blue)}
+.ok{text-align:center;padding:26px 10px}.ck{width:84px;height:84px;border-radius:50%;background:var(--ob2);color:var(--ok);font-size:2.6rem;display:grid;place-items:center;margin:0 auto 14px}
+.note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--sb);color:var(--ink);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.ch{display:flex;gap:8px}.chip{min-height:40px;padding:4px 16px;border-radius:99px;border:1.5px solid var(--ln);background:var(--p);cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fab{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(424px,calc(100% - 36px));min-height:52px;border-radius:14px;border:0;background:var(--ink);color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 6px 20px #0003}
+.tg{display:flex;align-items:center;gap:10px;background:var(--p);border:1px solid var(--ln);border-radius:10px;padding:12px;color:var(--ink);font-size:1rem}.tg input{width:22px;height:22px}
+.ft{text-align:center;margin-top:24px}.ft a{color:var(--mut)}.logo{width:96px;height:96px;border-radius:24px;background:var(--blue);margin:40px auto 18px}
+.si{text-align:center}.si .btn{width:100%;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;display:flex;gap:12px;align-items:center;z-index:9}
+.toast button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-weight:700}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const K="chaser.v2",CUR=["USD","EUR","GBP","INR","MYR","AUD","CAD"];
+const $=s=>document.querySelector(s),E=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let S={user:null,inv:[],auto:{on:false,before:true,due:true,late:true}};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem(K)))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast("Could not save on this device")}};
+const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10),dn=s=>Math.floor(Date.parse(s+"T00:00:00Z")/864e5),TD=()=>dn(iso(new Date()));
+const addD=(s,n)=>iso(new Date(Date.parse(s+"T12:00:00")+n*864e5)),now=()=>iso(new Date());
+const money=(c,n)=>new Intl.NumberFormat(undefined,{style:"currency",currency:c}).format(n);
+const fd=s=>new Date(s+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+const paid=i=>i.pays.reduce((t,p)=>t+p.a,0),left=i=>Math.round((i.amt-paid(i))*100)/100,late=i=>TD()-dn(i.due),done=i=>left(i)<=0;
+const find=id=>S.inv.find(x=>x.id===id),uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const st=i=>{if(done(i))return["Paid","ok"];const l=late(i);return l>0?[l+(l>1?" days late":" day late"),"lt"]:l===0?["Due today","sn"]:l>=-7?["Due in "+(-l)+(l<-1?" days":" day"),"sn"]:["Due in "+(-l)+" days",""]};
+const badge=i=>{const s=st(i);return `<span class="bd ${s[1]}">${s[0]}</span>`};
+const sums=a=>{const m={};a.forEach(i=>m[i.cur]=(m[i.cur]||0)+left(i));return Object.keys(m).map(c=>money(c,m[c])).join(" + ")||money("USD",0)};
+const nextNum=()=>"INV-"+String(Math.max(0,...S.inv.map(i=>parseInt(String(i.num).replace(/\D/g,""))||0))+1).padStart(3,"0");
+const tone=i=>late(i)>30?"final":late(i)>7?"firm":"friendly";
+function msg(i,t){const l=late(i),w=l>0?`was due on ${fd(i.due)} and is ${l} day${l>1?"s":""} overdue`:l===0?"is due today":`is due on ${fd(i.due)}`,a=money(i.cur,left(i));
+ const b={friendly:`A quick note that invoice ${i.num} for ${a} ${w}. Could you let me know when I can expect payment?\n\nThanks so much,`,
+ firm:`Invoice ${i.num} for ${a} ${w}. Please arrange payment this week, or tell me the date it will be paid.\n\nThank you,`,
+ final:`This is a final reminder: invoice ${i.num} for ${a} ${w}. Please pay within 3 days so we can avoid further steps.\n\nRegards,`};
+ return `Hi ${i.client},\n\n${b[t]}`}
+const rem=()=>!S.auto.on?[]:S.inv.filter(i=>{if(done(i))return false;const l=late(i),last=(i.rem||[]).slice(-1)[0];if(last===now())return false;
+ return(S.auto.before&&l===-3)||(S.auto.due&&l===0)||(S.auto.late&&l>0&&(!last||TD()-dn(last)>=7))});
+function toast(t,undo){document.querySelectorAll(".toast").forEach(x=>x.remove());const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.innerHTML=`<span>${E(t)}</span>`;
+ if(undo){const b=document.createElement("button");b.textContent="Undo";b.onclick=()=>{undo();d.remove()};d.append(b)}document.body.append(d);setTimeout(()=>d.remove(),undo?9000:2500)}
+const card=i=>`<div class="card" data-go="#/inv/${i.id}" tabindex="0" role="link" aria-label="Open invoice ${E(i.num)} for ${E(i.client)}"><div class="r"><div><b>${E(i.client)}</b><div class="m">${E(i.num)}</div></div><div class="ra"><b>${money(i.cur,left(i))}</b><div>${badge(i)}</div></div></div>${done(i)?"":`<div class="r g"><button class="btn pri" data-go="#/remind/${i.id}" aria-label="Send reminder for ${E(i.num)}">Send reminder</button><button class="btn" data-a="paid" data-id="${i.id}" aria-label="Mark ${E(i.num)} as paid">Mark paid</button></div>`}</div>`;
+const sec=(t,a)=>a.length?`<h3 class="lb">${t}</h3>`+a.map(card).join(""):"";
+function vSign(){return `<div class="si"><div class="logo" aria-hidden="true"></div><h1>Chaser</h1><p class="m">Know who owes you, before it is late.</p><br>
+<button class="btn pri" data-a="in">Continue with Google</button><button class="btn" data-a="in">Continue with Microsoft</button><button class="lnk" data-a="in">Use email instead</button>
+<p class="m">Demo sign in: no account is created and your invoices stay on this device.</p></div>`}
+function vToday(){const open=S.inv.filter(i=>!done(i)),L=open.filter(i=>late(i)>0).sort((a,b)=>late(b)-late(a)),D=open.filter(i=>late(i)<=0&&late(i)>=-7).sort((a,b)=>a.due<b.due?-1:1),R=open.filter(i=>late(i)<-7).sort((a,b)=>a.due<b.due?-1:1),n=L.length+D.length,rm=rem();
+ const nx=open.slice().sort((a,b)=>a.due<b.due?-1:1)[0],by={};open.forEach(i=>{const k=i.client+"|"+i.cur;by[k]=(by[k]||0)+left(i)});
+ return `<header class="hd"><div><h1>Today</h1><p class="m">${n} invoice${n===1?"":"s"} need action</p></div><a class="btn sm" href="#/auto">Auto reminders</a></header>`
+ +(rm.length?`<div class="note"><b>${rm.length} reminder${rm.length>1?"s":""} ready</b><button class="btn pri sm" data-go="#/remind/${rm[0].id}">Review</button></div>`:"")
+ +(!S.inv.length?`<div class="card"><p>No invoices yet.</p><button class="btn pri w" data-go="#/add">Add your first invoice</button><button class="btn w" data-a="sample">Load sample data</button></div>`:
+ (n?"":`<div class="ok"><div class="ck" aria-hidden="true">✓</div><h2>You are all caught up</h2><p class="m">${nx?"Next due: "+E(nx.client)+", "+st(nx)[0].toLowerCase():"Nothing is waiting for payment."}</p></div>`)
+ +sec("Late",L)+sec("Due this week",D)+sec("Later",R)
+ +(open.length?`<h3 class="lb">Owed by client</h3>`+Object.keys(by).sort((a,b)=>by[b]-by[a]).map(k=>{const p=k.split("|");return `<div class="card r"><span>${E(p[0])}</span><b>${money(p[1],by[k])}</b></div>`}).join("")+`<p class="m">Total owed: <b>${sums(open)}</b></p>`:""))
+ +`<button class="fab" data-go="#/add">+ Add invoice</button><p class="ft m"><a href="#" data-a="export">Export backup</a> · <a href="#" data-a="import">Import backup</a> · <a href="#" data-a="out">Sign out</a> · <a href="#" data-a="clear">Clear data</a></p>`}
+function vForm(id){const i=id?find(id):null;if(id&&!i)return nf();const v=i||{client:"",email:"",num:nextNum(),amt:"",cur:S.cur||"USD",issued:now()},tm=i?dn(i.due)-dn(i.issued):30;
+ return `<a class="bk" href="#/${i?"inv/"+i.id:"today"}">&lt; ${i?"Back":"Cancel"}</a><h1>${i?"Edit invoice":"New invoice"}</h1><br><form id="f" data-id="${id||""}">
+<label>Client<input name="client" list="cl" required value="${E(v.client)}"><datalist id="cl">${[...new Set(S.inv.map(x=>x.client))].map(c=>`<option value="${E(c)}">`).join("")}</datalist></label>
+<label>Client email (optional, used to send reminders)<input name="email" type="email" value="${E(v.email)}"></label>
+<label>Invoice no.<input name="num" required value="${E(v.num)}"></label>
+<div class="r2"><label>Amount<input name="amt" type="number" min="0.01" step="0.01" required value="${v.amt}"></label><label>Currency<select name="cur">${CUR.map(c=>`<option${c===v.cur?" selected":""}>${c}</option>`).join("")}</select></label></div>
+<div class="r2"><label>Issued<input name="issued" type="date" required value="${v.issued}"></label><label>Payment terms (days)<input name="terms" type="number" min="0" required value="${tm}"></label></div>
+<p class="m" id="duep" aria-live="polite"></p><button class="btn pri w">Save invoice</button></form>`}
+function vInv(id){const i=find(id);if(!i)return nf();const p=paid(i);
+ return `<a class="bk" href="#/today">&lt; Back</a><h1>${E(i.num)}</h1><p class="m">${E(i.client)} ${badge(i)}</p>
+<div class="card"><div class="m">Left to pay</div><div class="big">${money(i.cur,left(i))}</div><div class="m">of ${money(i.cur,i.amt)}, due ${fd(i.due)}</div><div class="pb"><i style="width:${Math.min(100,p/i.amt*100)}%"></i></div><div class="m">${money(i.cur,p)} paid so far</div></div>
+<h3 class="lb">Payments</h3>${i.pays.length?i.pays.map(q=>`<div class="card r"><span>${fd(q.d)}</span><b>${money(i.cur,q.a)}</b></div>`).join(""):`<p class="m">No payments yet.</p>`}
+${done(i)?"":`<form id="pf" data-id="${i.id}" class="card" novalidate><label>Amount received (${money(i.cur,left(i))} left)<input name="a" type="number" inputmode="decimal" min="0.01" step="any"></label><button class="btn w" style="margin-top:0">+ Record payment</button></form>
+<button class="btn pri w" data-go="#/remind/${i.id}">Send reminder</button><button class="btn w" data-a="paid" data-id="${i.id}">Mark fully paid</button>`}
+<button class="btn w" data-go="#/edit/${i.id}">Edit invoice</button><button class="lnk" data-a="del" data-id="${i.id}">Delete invoice</button>`}
+function vRemind(id){const i=find(id);if(!i)return nf();const t=tone(i);
+ return `<a class="bk" href="#/inv/${id}">&lt; Back</a><h1>Remind ${E(i.client)}</h1><p class="m">${E(i.num)} · ${money(i.cur,left(i))} · ${badge(i)}</p>
+<h3 class="lb">Tone</h3><div class="ch">${["friendly","firm","final"].map(x=>`<button class="chip${x===t?" on":""}" data-tone="${x}" data-id="${id}">${x[0].toUpperCase()+x.slice(1)}</button>`).join("")}</div>
+<h3 class="lb">Message</h3><textarea id="msg" rows="10" aria-label="Reminder message">${E(msg(i,t))}</textarea>
+<button class="btn pri w" data-a="send" data-id="${id}">${i.email?"Send message (opens your email)":"Send message (copies the text)"}</button><button class="btn w" data-a="copy">Copy text</button>`}
+function vSent(id){const i=find(id);if(!i)return nf();
+ return `<div class="ok"><div class="ck" aria-hidden="true">✓</div><h2>Reminder sent</h2><p class="m">${E(i.client)}, ${E(i.num)}</p><p class="m">Logged today. It will show on Today again in 7 days if still unpaid.</p></div>
+${S.auto.on?"":`<div class="card"><b>Tired of chasing?</b><p class="m">Let Chaser prepare reminders for you.</p><button class="btn pri sm" data-go="#/auto">Turn on</button></div>`}
+<button class="btn pri w" data-go="#/today">Back to Today</button><button class="btn w" data-a="unsend" data-id="${id}">Undo send</button>`}
+function vAuto(){const o=[["before","3 days before the due date"],["due","On the due date"],["late","Every 7 days when it is late"]];
+ return `<a class="bk" href="#/today">&lt; Back</a><h1>Auto reminders</h1><br><label class="tg"><input type="checkbox" data-au="on" ${S.auto.on?"checked":""}> Prepare reminders for me</label>
+<p class="m">Chaser works out which reminders are due and shows them on Today. You check and send them. Sending emails without you needs a server, which is a next step.</p>
+<h3 class="lb">When</h3>${o.map(x=>`<label class="tg"><input type="checkbox" data-au="${x[0]}" ${S.auto[x[0]]?"checked":""}> ${x[1]}</label>`).join("")}
+<h3 class="lb">Tone</h3><p class="m">Starts friendly and gets firmer the later an invoice is.</p>`}
+const nf=()=>`<a class="bk" href="#/today">&lt; Back</a><h2>Not found</h2><p class="m">That invoice no longer exists.</p>`;
+function render(keep){const h=location.hash.slice(2).split("/"),r=h[0]||"today";if(!S.user&&r!=="signin"){location.hash="#/signin";return}
+ const m={signin:vSign,today:vToday,add:()=>vForm(),edit:()=>vForm(h[1]),inv:()=>vInv(h[1]),remind:()=>vRemind(h[1]),sent:()=>vSent(h[1]),auto:vAuto};
+ $("#app").innerHTML=(m[r]||vToday)();if(!keep)window.scrollTo(0,0);const f=$("#f");if(f){const p=()=>{const d=f.issued.value;$("#duep").textContent=d?"Due on "+fd(addD(d,parseInt(f.terms.value)||0)):""};f.addEventListener("input",p);p()}}
+function go(h){location.hash=h}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a],[data-go],[data-tone]");if(!b)return;const d=b.dataset,i=find(d.id);
+ if(d.go){e.preventDefault();return go(d.go)}
+ if(d.tone){document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c===b));$("#msg").value=msg(i,d.tone);return}
+ e.preventDefault();const a=d.a;
+ if(a==="in"){S.user={demo:true};save();go("#/today")}
+ else if(a==="paid"){const x=left(i);i.pays.push({d:now(),a:x});save();toast("Marked as paid",()=>{i.pays.pop();save();render()});location.hash.startsWith("#/inv")?go("#/today"):render()}
+ else if(a==="del"){const k=S.inv.indexOf(i);S.inv.splice(k,1);save();toast("Invoice deleted",()=>{S.inv.splice(k,0,i);save();render()});go("#/today")}
+ else if(a==="send"){const t=$("#msg").value;i.rem=(i.rem||[]).concat(now());save();
+  if(i.email){const l=document.createElement("a");l.href="mailto:"+encodeURIComponent(i.email)+"?subject="+encodeURIComponent("Invoice "+i.num)+"&body="+encodeURIComponent(t);l.click()}
+  else if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});go("#/sent/"+i.id)}
+ else if(a==="copy"){const t=$("#msg").value;navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>toast("Copy failed")):toast("Copy not supported")}
+ else if(a==="unsend"){i.rem=(i.rem||[]).slice(0,-1);save();go("#/remind/"+i.id)}
+ else if(a==="sample"){const t=now(),mk=(c,n,a,ago,tm,cu,pp)=>({id:uid(),client:c,email:"",num:n,amt:a,cur:cu||"USD",issued:addD(t,-ago),due:addD(t,-ago+tm),pays:pp||[],rem:[]});
+  S.inv.push(mk("Northwind Studio","INV-001",1200,95,30),mk("Fable Books","INV-002",2400,38,30,"USD",[{d:addD(t,-10),a:1000}]),mk("Bloom Coffee Co.","INV-003",450,11,14,"EUR"),mk("Kite Labs","INV-004",1500,2,30,"GBP"));save();render()}
+ else if(a==="out"){S.user=null;save();go("#/signin")}
+ else if(a==="clear"){if(confirm("Delete all invoices on this device?")){S.inv=[];save();render()}}
+ else if(a==="export"){const l=document.createElement("a");l.href=URL.createObjectURL(new Blob([JSON.stringify(S.inv,null,1)],{type:"application/json"}));l.download="chaser-backup-"+now()+".json";l.click()}
+ else if(a==="import"){const f=document.createElement("input");f.type="file";f.accept=".json";f.onchange=()=>f.files[0].text().then(t=>{try{const a=JSON.parse(t);if(!Array.isArray(a))throw 0;if(confirm("Replace your invoices with "+a.length+" from this backup?")){S.inv=a;save();render()}}catch(x){toast("That file is not a Chaser backup")}});f.click()}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches(".card[data-go]"))go(e.target.dataset.go)});
+document.addEventListener("submit",e=>{e.preventDefault();const f=e.target,v=Object.fromEntries(new FormData(f));
+ if(f.id==="pf"){const i=find(f.dataset.id),a=parseFloat(v.a);if(!(a>0))return toast("Enter the amount you received");const x=Math.min(a,left(i));i.pays.push({d:now(),a:x});save();toast(a>x?"Recorded, capped at the amount left":"Payment recorded",()=>{i.pays.pop();save();render(true)});return render(true)}
+ const id=f.dataset.id,amt=parseFloat(v.amt);if(!(amt>0))return toast("Amount must be more than 0");
+ if(S.inv.some(x=>x.id!==id&&x.client===v.client.trim()&&x.num===v.num.trim())&&!confirm("This client already has an invoice with that number. Save anyway?"))return;
+ const o={client:v.client.trim(),email:v.email.trim(),num:v.num.trim(),amt,cur:v.cur,issued:v.issued,due:addD(v.issued,parseInt(v.terms)||0)};S.cur=v.cur;let i;
+ if(id){i=find(id);Object.assign(i,o)}else{i=Object.assign({id:uid(),pays:[],rem:[]},o);S.inv.push(i)}save();go("#/inv/"+i.id)});
+document.addEventListener("change",e=>{const k=e.target.dataset.au;if(k){S.auto[k]=e.target.checked;save();toast("Saved")}});
+addEventListener("hashchange",()=>render());document.addEventListener("visibilitychange",()=>{if(!document.hidden&&/^#\/(today)?$/.test(location.hash))render()});
+render();
+</script>
+</body>
+</html>
